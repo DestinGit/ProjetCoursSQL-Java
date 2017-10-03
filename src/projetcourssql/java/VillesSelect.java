@@ -13,51 +13,82 @@ import java.sql.*;
  */
 public class VillesSelect {
 
-    private static Connection lcn;
+    /**
+     *
+     * @param psIP
+     * @param psPort
+     * @param psUT
+     * @param psMDP
+     * @param psBD
+     * @return
+     */
+    public static Connection seConnecter(String psIP, String psPort, String psUT, String psMDP, String psBD) {
+        Connection lcn = null;
+
+        String lsDSN = "jdbc:mysql://" + psIP + ":" + psPort + "/" + psBD;
+
+        try {
+            lcn = DriverManager.getConnection(lsDSN, psUT, psMDP);
+        } catch (SQLException e) {
+
+        }
+        return lcn;
+    } /// seConnecter
+
+    /**
+     *
+     * @param lcn
+     */
+    public static void seDeconnecter(Connection lcn) {
+        lcn = null;
+    } /// seDeconnecter
+
+    /**
+     *
+     * @param pcnx
+     * @param psSQL
+     * @return
+     */
+    public static String getData(Connection pcnx, String psSQL) {
+        StringBuilder lsbContenu = new StringBuilder();
+        try {
+            Statement lstSQL = pcnx.createStatement();
+            ResultSet lrs = lstSQL.executeQuery(psSQL);
+            while (lrs.next()) {
+                lsbContenu.append("[");
+                lsbContenu.append(lrs.getString(1));
+                lsbContenu.append("] ");
+                lsbContenu.append(lrs.getString(2));
+                lsbContenu.append(System.getProperty("line.separator"));
+            }
+        } catch (SQLException e) {
+            lsbContenu.append(e.getMessage());
+        }
+        return lsbContenu.toString();
+    } /// getData
 
     public static void main(String[] args) {
-        // --- Déclarations et affectation
+        // --- Déclarations
+        Connection lcn;
+        String lsServeur;
+        String lsPort;
+        String lsBD;
+        String lsUt;
+        String lsMdp;
+        String lsSelect;
+
         // --- Pour une connexion MySQL native
-        String lsServeur = "127.0.0.1";
-        String lsPort = "3306";
-        String lsBD = "cours";
-        String lsUt = "root";
-        String lsMdp = "";
-        String lsDSN = "jdbc:mysql://" + lsServeur + ":" + lsPort + "/" + lsBD;
+        lsServeur = "127.0.0.1";
+        lsPort = "3306";
+        lsBD = "cours";
+        lsUt = "root";
+        lsMdp = "";
+        lsSelect = "SELECT * FROM villes";
 
-        getConnection(lsDSN, lsUt, lsMdp);
+        lcn = seConnecter(lsServeur, lsPort, lsUt, lsMdp, lsBD);
+        String lsContenu = getData(lcn, lsSelect);
+        seDeconnecter(lcn);
+
+        System.out.println(lsContenu);
     } /// main
-
-    public static void getConnection(String lsDSN, String lsUt, String lsMdp) {
-        String lsPilote = "org.gjt.mm.mysql.Driver";
-        try {
-            Class.forName(lsPilote);
-            lcn = DriverManager.getConnection(lsDSN, lsUt, lsMdp);
-        } catch (ClassNotFoundException | SQLException e) {
-            System.err.println(e.getMessage());
-        }
-    }
-
-    public static void disconnect() {
-        lcn = null;
-    }
-    
-    public StringBuilder getVilles() throws SQLException {
-        Statement lstSQL;
-        ResultSet lrs;
-
-        StringBuilder lsbContenu = new StringBuilder("");
-        String lsSelect = "SELECT * FROM villes";
-
-        lstSQL = lcn.createStatement();
-        lrs = lstSQL.executeQuery(lsSelect);
-        while (lrs.next()) {
-            lsbContenu.append("[");
-            lsbContenu.append(lrs.getString(1));
-            lsbContenu.append("] ");
-            lsbContenu.append(lrs.getString(2));
-            lsbContenu.append(System.getProperty("line.separator"));
-        }
-        return lsbContenu;
-    }    
 }
